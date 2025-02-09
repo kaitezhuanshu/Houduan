@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int        @id @default(autoincrement()) // 用户ID，自增主键
+  username  String     @unique // 用户名，唯一
+  password  String // 密码
+  name      String   // 姓名
+  phone     String   // 手机号
+  town      String   // 镇
+  village   String   // 村
+  address   String? // 地址
+  avatarUrl String? // 头像链接，可选
+  posts     Post[] // 用户创建的帖子
+  comments  Comment[] // 用户发表的评论
+  favorites Favorite[] // 用户收藏的帖子
+}
+
+model Category {
+  id    Int    @id @default(autoincrement())
+  name  String @unique // 分类名称（如西红柿、黄瓜、茄子）
+  posts Post[] // 关联的帖子
+}
+
+model Post {
+  id          Int        @id @default(autoincrement())
+  title       String // 帖子标题
+  description String // 帖子描述
+  imageUrl    String? // 图片 URL
+  views       Int        @default(0) // 浏览量
+  likes       Int        @default(0) // 点赞数
+  createdAt   DateTime   @default(now()) // 创建时间
+  updatedAt   DateTime   @updatedAt // 更新时间
+  authorId    Int // 作者 ID
+  author      User       @relation(fields: [authorId], references: [id]) // 关联的用户
+  categoryId  Int // 分类 ID
+  category    Category   @relation(fields: [categoryId], references: [id]) // 关联的分类
+  comments    Comment[] // 关联的评论
+  favorites   Favorite[] // 收藏记录
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String // 评论内容
+  createdAt DateTime @default(now()) // 创建时间
+  postId    Int // 帖子 ID
+  post      Post     @relation(fields: [postId], references: [id]) // 关联的帖子
+  userId    Int // 用户 ID
+  user      User     @relation(fields: [userId], references: [id]) // 关联的用户
+}
+
+model Favorite {
+  id     Int  @id @default(autoincrement())
+  postId Int // 帖子 ID
+  post   Post @relation(fields: [postId], references: [id]) // 关联的帖子
+  userId Int // 用户 ID
+  user   User @relation(fields: [userId], references: [id]) // 关联的用户
+
+  @@unique([postId, userId]) // 确保每个用户只能收藏一次
+}
